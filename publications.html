@@ -1917,5 +1917,78 @@
   </div>
 </footer>
 
+<script>
+  (function () {
+    function extractQuotedTitle(text) {
+      if (!text) return null;
+
+      var curlyMatches = Array.from(text.matchAll(/“([^”]+)”/g));
+      if (curlyMatches.length > 0) {
+        return curlyMatches[curlyMatches.length - 1][1].trim();
+      }
+
+      var straightMatches = Array.from(text.matchAll(/"([^"]+)"/g));
+      if (straightMatches.length > 0) {
+        return straightMatches[straightMatches.length - 1][1].trim();
+      }
+
+      return null;
+    }
+
+    async function extractTitleFromBibtexUrl(url) {
+      if (!url) return null;
+      try {
+        var resp = await fetch(url, { cache: 'force-cache' });
+        if (!resp.ok) return null;
+        var bib = await resp.text();
+
+        var match = bib.match(/\btitle\s*=\s*\{([^}]+)\}/i) || bib.match(/\btitle\s*=\s*"([^"]+)"/i);
+        if (!match) return null;
+
+        return match[1].replace(/\s+/g, ' ').trim();
+      } catch (e) {
+        return null;
+      }
+    }
+
+    async function enhanceCards() {
+      var cards = document.querySelectorAll('.pub-card');
+      for (var i = 0; i < cards.length; i++) {
+        var card = cards[i];
+        if (card.querySelector('.pub-title')) continue;
+
+        var cite = card.querySelector('.pub-cite');
+        var title = extractQuotedTitle(cite ? cite.textContent : '');
+
+        if (!title) {
+          var bibLink = card.querySelector('.pub-links a[download][href$=".bib"]');
+          if (bibLink && bibLink.getAttribute('href')) {
+            title = await extractTitleFromBibtexUrl(bibLink.getAttribute('href'));
+          }
+        }
+
+        if (!title) continue;
+
+        var heading = document.createElement('h4');
+        heading.className = 'pub-title';
+        heading.textContent = title;
+
+        var top = card.querySelector('.pub-top');
+        if (top && top.parentNode) {
+          top.parentNode.insertBefore(heading, top);
+        } else {
+          card.insertBefore(heading, card.firstChild);
+        }
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', enhanceCards);
+    } else {
+      enhanceCards();
+    }
+  })();
+</script>
+
 </body>
 </html>
