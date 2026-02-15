@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+
+Disallow: /bibtex/
+
+Sitemap: https://fmrico.github.io/sitemap.xml

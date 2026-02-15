@@ -301,8 +301,38 @@ def write_publications_page(pubs_html: str) -> None:
   <meta charset=\"utf-8\" />
   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />
   <title>Publications – Francisco Martín Rico</title>
-  <meta name=\"description\" content=\"Publications by Francisco Martín Rico.\" />
+    <meta name=\"description\" content=\"Publications by Francisco Martín Rico (selected papers, journals, conferences, books) with DOI and BibTeX links.\" />
   <meta name=\"robots\" content=\"index, follow\" />
+    <meta name=\"author\" content=\"Francisco Martín Rico\" />
+    <link rel=\"canonical\" href=\"https://fmrico.github.io/publications.html\" />
+    <link rel=\"icon\" href=\"img/fmrico.png\" type=\"image/png\" />
+
+    <meta property=\"og:site_name\" content=\"Francisco Martín Rico\" />
+    <meta property=\"og:type\" content=\"website\" />
+    <meta property=\"og:title\" content=\"Publications – Francisco Martín Rico\" />
+    <meta property=\"og:description\" content=\"Publications by Francisco Martín Rico with DOI and BibTeX links.\" />
+    <meta property=\"og:url\" content=\"https://fmrico.github.io/publications.html\" />
+    <meta property=\"og:image\" content=\"https://fmrico.github.io/img/fmrico.png\" />
+
+    <meta name=\"twitter:card\" content=\"summary\" />
+    <meta name=\"twitter:title\" content=\"Publications – Francisco Martín Rico\" />
+    <meta name=\"twitter:description\" content=\"Publications by Francisco Martín Rico with DOI and BibTeX links.\" />
+    <meta name=\"twitter:image\" content=\"https://fmrico.github.io/img/fmrico.png\" />
+    <meta name=\"twitter:site\" content=\"@fmrico\" />
+
+    <script type=\"application/ld+json\">
+    {{
+        \"@context\": \"https://schema.org\",
+        \"@type\": \"CollectionPage\",
+        \"name\": \"Publications – Francisco Martín Rico\",
+        \"url\": \"https://fmrico.github.io/publications.html\",
+        \"about\": {{
+            \"@type\": \"Person\",
+            \"name\": \"Francisco Martín Rico\",
+            \"url\": \"https://fmrico.github.io/\"
+        }}
+    }}
+    </script>
   <link rel=\"stylesheet\" href=\"styles.css\" />
 </head>
 <body>
