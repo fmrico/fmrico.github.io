@@ -1919,17 +1919,80 @@
 
 <script>
   (function () {
-    function extractQuotedTitle(text) {
-      if (!text) return null;
+    function normalizeSpaces(text) {
+      return String(text || '').replace(/\s+/g, ' ').trim();
+    }
 
-      var curlyMatches = Array.from(text.matchAll(/“([^”]+)”/g));
-      if (curlyMatches.length > 0) {
-        return curlyMatches[curlyMatches.length - 1][1].trim();
+    function cleanTitleCandidate(title) {
+      if (!title) return null;
+      var cleaned = normalizeSpaces(title);
+
+      // If a malformed citation included nested opening quotes inside the captured span,
+      // keep only the portion after the last opening quote.
+      var lastNestedOpen = Math.max(
+        cleaned.lastIndexOf('“'),
+        cleaned.lastIndexOf('„'),
+        cleaned.lastIndexOf('"'),
+        cleaned.lastIndexOf('«')
+      );
+      if (lastNestedOpen >= 0 && lastNestedOpen < cleaned.length - 1) {
+        cleaned = normalizeSpaces(cleaned.slice(lastNestedOpen + 1));
       }
 
-      var straightMatches = Array.from(text.matchAll(/"([^"]+)"/g));
-      if (straightMatches.length > 0) {
-        return straightMatches[straightMatches.length - 1][1].trim();
+      // Remove common BibTeX-ish debris that sometimes appears inside quotes.
+      cleaned = cleaned.replace(/^\d+\}\s*,?\s*/i, '');
+      cleaned = cleaned.replace(/^collection=\{[^}]+\}\s*/i, '');
+
+      // Strip simple LaTeX/BibTeX braces (best-effort).
+      cleaned = cleaned.replace(/[{}]/g, '');
+
+      // Trim trailing punctuation.
+      cleaned = cleaned.replace(/[\s,.;:]+$/g, '').trim();
+
+      if (cleaned.length < 4) return null;
+      return cleaned;
+    }
+
+    function extractTitleFromCiteText(text) {
+      var t = normalizeSpaces(text);
+      if (!t) return null;
+
+      var pairs = [
+        { open: '“', close: '”' },
+        { open: '„', close: '“' },
+        { open: '«', close: '»' },
+        { open: '"', close: '"' }
+      ];
+
+      var best = null;
+      var bestCloseIndex = -1;
+
+      for (var i = 0; i < pairs.length; i++) {
+        var openQ = pairs[i].open;
+        var closeQ = pairs[i].close;
+
+        var closeIndex = t.lastIndexOf(closeQ);
+        if (closeIndex < 0) continue;
+
+        var openIndex = t.lastIndexOf(openQ, closeIndex - 1);
+        if (openIndex < 0) continue;
+
+        var candidate = t.slice(openIndex + openQ.length, closeIndex);
+        candidate = cleanTitleCandidate(candidate);
+        if (!candidate) continue;
+
+        if (closeIndex > bestCloseIndex) {
+          best = candidate;
+          bestCloseIndex = closeIndex;
+        }
+      }
+
+      if (best) return best;
+
+      // Fallback: unbalanced opening quote, take text after the last opening quote.
+      var lastOpen = Math.max(t.lastIndexOf('“'), t.lastIndexOf('„'), t.lastIndexOf('"'), t.lastIndexOf('«'));
+      if (lastOpen >= 0 && lastOpen < t.length - 1) {
+        return cleanTitleCandidate(t.slice(lastOpen + 1));
       }
 
       return null;
@@ -1945,7 +2008,7 @@
         var match = bib.match(/\btitle\s*=\s*\{([^}]+)\}/i) || bib.match(/\btitle\s*=\s*"([^"]+)"/i);
         if (!match) return null;
 
-        return match[1].replace(/\s+/g, ' ').trim();
+        return cleanTitleCandidate(match[1]);
       } catch (e) {
         return null;
       }
@@ -1958,7 +2021,7 @@
         if (card.querySelector('.pub-title')) continue;
 
         var cite = card.querySelector('.pub-cite');
-        var title = extractQuotedTitle(cite ? cite.textContent : '');
+        var title = extractTitleFromCiteText(cite ? cite.textContent : '');
 
         if (!title) {
           var bibLink = card.querySelector('.pub-links a[download][href$=".bib"]');
